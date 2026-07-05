@@ -1,0 +1,59 @@
+const { serviceClient, anonClient } = require("../lib/supa");
+const { readJson } = require("../lib/body");
+
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
+
+module.exports = async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
+
+  try {
+    const b = await readJson(req);
+    const username = (b.username || "").trim();
+    const email = (b.email || "").trim().toLowerCase();
+    const password = b.password || "";
+
+    if (!USERNAME_RE.test(username))
+      return res.status(400).json({ ok: false, error: "Username 3-20 karakter, hanya huruf, angka, dan _." });
+    if (!email.includes("@"))
+      return res.status(400).json({ ok: false, error: "Email tidak valid." });
+    if (password.length < 6)
+      return res.status(400).json({ ok: false, error: "Password minimal 6 karakter." });
+
+    const admin = serviceClient();
+
+    // Cek username unik (case-insensitive)
+    const { data: taken } = await admin
+      .from("profiles").select("user_id").eq("username_lower", username.toLowerCase()).maybeSingle();
+    if (taken) return res.status(400).json({ ok: false, error: "Username sudah dipakai." });
+
+    // Buat user dengan email langsung terkonfirmasi -> tidak ada email konfirmasi terkirim
+    const { data: created, error: cErr } = await admin.auth.admin.createUser({
+      email, password, email_confirm: true,
+    });
+    if (cErr) {
+      const msg = /already|registered|exists/i.test(cErr.message) ? "Email sudah terdaftar." : cErr.message;
+      return res.status(400).json({ ok: false, error: msg });
+    }
+    const uid = created.user.id;
+
+    // Simpan profil
+    const { error: pErr } = await admin.from("profiles").insert({ user_id: uid, username, email });
+    if (pErr) {
+      await admin.auth.admin.deleteUser(uid); // rollback agar tidak ada user tanpa profil
+      const msg = /duplicate|unique/i.test(pErr.message) ? "Username sudah dipakai." : pErr.message;
+      return res.status(400).json({ ok: false, error: msg });
+    }
+
+    // Langsung login -> kembalikan sesi
+    const anon = anonClient();
+    const { data: s } = await anon.auth.signInWithPassword({ email, password });
+    const session = s && s.session
+      ? { access_token: s.session.access_token, refresh_token: s.session.refresh_token }
+      : null;
+
+    res.status(200).json({ ok: true, session });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+};

@@ -5,9 +5,15 @@ Tools kirim email lamaran kerja versi **web** dengan **akun login/daftar** dan
 di database (App Password dienkripsi), jadi kamu bisa pakai dari HP/laptop mana
 saja tanpa file `.env` di komputer. Siap di-hosting **Vercel**.
 
-Fitur: template lamaran tetap, pilih posisi & deskripsi keahlian (Bartender /
+Fitur: daftar/login dengan **username atau email**, **reveal password**, tab
+**Profil** (ganti username/email/password), **lupa password** via email reset,
+template lamaran tetap, pilih posisi & deskripsi keahlian (Bartender /
 Software-Hardware Engineer / custom), banyak lampiran (file upload + link), dan
 lampiran dikirim sebagai **file asli**.
+
+Catatan penting: **pendaftaran tidak mengirim email** (langsung aktif, biar
+cepat). Email hanya dipakai untuk **lupa password** — itulah kenapa perlu SMTP
+di Langkah 3.5.
 
 ---
 
@@ -24,14 +30,13 @@ lampiran dikirim sebagai **file asli**.
 
 1. Daftar/masuk di https://supabase.com → **New project**.
 2. Setelah jadi, buka **SQL Editor → New query**, tempel isi file
-   `supabase-schema.sql`, lalu **Run**. Ini membuat tabel `email_configs`.
-3. (Opsional, agar login instan tanpa konfirmasi email) buka
-   **Authentication → Providers/Settings → Email** dan matikan
-   **Confirm email**. Kalau dibiarkan aktif, setiap akun baru harus klik link
-   konfirmasi di email dulu.
-4. (Opsional, agar privat) di **Authentication → Settings**, matikan
-   **Allow new users to sign up** setelah kamu selesai mendaftar, supaya orang
-   lain tidak bisa bikin akun.
+   `supabase-schema.sql`, lalu **Run**. Ini membuat tabel `email_configs` dan
+   `profiles` (untuk username).
+3. Pendaftaran di aplikasi ini **tidak mengirim email** (akun langsung aktif),
+   jadi kamu tidak perlu mengutak-atik pengaturan "Confirm email".
+4. Tambahkan URL situs ke daftar redirect (dipakai link reset password): buka
+   **Authentication → URL Configuration → Redirect URLs**, tambahkan URL Vercel
+   kamu (mis. `https://auto-lamaran.vercel.app`).
 5. Catat kredensial di **Project Settings → API**:
    - `Project URL`
    - `anon public` key
@@ -82,14 +87,48 @@ Set untuk environment **Production** (dan Preview/Development bila perlu).
 
 ---
 
+## Langkah 3.5 — Email reset password (SMTP)
+
+Fitur **lupa password** butuh Supabase bisa mengirim email. Email bawaan
+Supabase sangat dibatasi (beberapa email/jam, sering masuk spam), jadi pasang
+**SMTP sendiri** yang gratis & cepat. Rekomendasi: **Resend** (gratis 3.000
+email/bulan, 100/hari — lebih dari cukup untuk reset password).
+
+**Pakai Resend:**
+1. Daftar di https://resend.com → verifikasi sebuah domain milikmu (mis.
+   `c3b1.web.id`) dengan menambahkan DNS record yang mereka berikan.
+2. Buat **API Key** di Resend.
+3. Di **Supabase → Authentication → Emails → SMTP Settings**, aktifkan
+   **Custom SMTP** dan isi:
+   - Host: `smtp.resend.com`
+   - Port: `465` (atau `587`)
+   - Username: `resend`
+   - Password: `API Key Resend`
+   - Sender email: alamat di domain yang kamu verifikasi (mis. `no-reply@c3b1.web.id`)
+   - Sender name: bebas (mis. `C3B1xHUB`)
+4. Simpan. Selesai — email reset password akan dikirim lewat Resend.
+
+Alternatif SMTP gratis: **Brevo** (smtp-relay.brevo.com, 300 email/hari).
+Isian Supabase-nya sama polanya (host/port/user/pass dari akun Brevo).
+
+> Tanpa Custom SMTP, tombol "Kirim link reset" tetap jalan tapi email bisa lambat
+> atau tidak terkirim. Pendaftaran tidak terpengaruh (memang tanpa email).
+
+---
+
 ## Langkah 4 — Pakai
 
 1. Buka URL Vercel-mu (mis. `https://auto-lamaran.vercel.app`).
-2. **Daftar** akun (email + password), lalu **Masuk**.
-3. Buka tab **Pengaturan**:
+2. **Daftar** akun (username + email + password) — langsung aktif tanpa
+   konfirmasi email. **Masuk** bisa pakai **email atau username**. Ikon mata di
+   kolom password untuk memperlihatkan/menyembunyikan.
+3. (Opsional) tab **Profil** untuk mengganti username, email, atau password.
+   Lupa password? klik **"Lupa password?"** di halaman Masuk (butuh SMTP di
+   Langkah 3.5).
+4. Buka tab **Pengaturan**:
    - Isi **Email Gmail pengirim** + **App Password Gmail** + nama tampilan.
    - Klik **Simpan konfigurasi**, lalu **Tes koneksi** (harus hijau).
-4. Buka tab **Kirim Lamaran**:
+5. Buka tab **Kirim Lamaran**:
    - Isi email tujuan, subject, posisi.
    - Pilih deskripsi keahlian (Bartender / Engineer / custom).
    - Tambahkan lampiran (upload file dan/atау link), cek preview, **Kirim email**.
@@ -132,7 +171,8 @@ vercel dev               # buka http://localhost:3000
 | Halaman login "Supabase belum dikonfigurasi" | Env `SUPABASE_URL`/`SUPABASE_ANON_KEY` belum diisi → isi lalu Redeploy. |
 | Simpan config error `ENCRYPTION_KEY harus 64 karakter` | Isi `ENCRYPTION_KEY` dengan hasil `openssl rand -hex 32`. |
 | Tes koneksi gagal `Invalid login` | App Password salah / pakai password biasa. Buat ulang App Password. |
-| Daftar tapi tak bisa masuk | "Confirm email" masih aktif → cek email, atau matikan di Supabase. |
+| Daftar gagal "Username sudah dipakai" | Ganti username lain (huruf/angka/_ , 3-20 karakter). |
+| Email reset tidak datang | SMTP di Supabase belum diatur (Langkah 3.5), atau URL belum ada di Redirect URLs. Cek folder spam. |
 | `FUNCTION_PAYLOAD_TOO_LARGE` | Total upload > 4 MB → pakai opsi link untuk file besar. |
 
 ---

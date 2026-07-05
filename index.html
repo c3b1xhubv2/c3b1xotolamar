@@ -195,6 +195,19 @@
   .dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
   .dot.err { background: var(--err); box-shadow: 0 0 8px var(--err); }
 
+  /* ---------- reveal password & lainnya ---------- */
+  .pw { position: relative; }
+  .pw input { padding-right: 46px; }
+  .pw .eye { position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+    width: 36px; height: 36px; border: none; background: transparent; color: var(--muted);
+    cursor: pointer; border-radius: 8px; display: grid; place-items: center; padding: 0; }
+  .pw .eye:hover { color: var(--text); }
+  .link-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 12.5px;
+    font-family: var(--sans); padding: 4px 0; margin-top: 10px; display: block; width: auto; }
+  .link-btn:hover { text-decoration: underline; }
+  .mini { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
+  .mini:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
   /* ---------- Panduan / tutorial ---------- */
   .tut { max-width: 720px; margin: 0 auto; }
   .tut .card { margin-bottom: 16px; }
@@ -250,22 +263,60 @@
         </div>
       </div>
 
-      <div class="seg" id="authSeg">
-        <button data-mode="login" class="active">Masuk</button>
-        <button data-mode="register">Daftar</button>
+      <!-- MAIN: login / daftar -->
+      <div id="authMain">
+        <div class="seg" id="authSeg">
+          <button data-mode="login" class="active">Masuk</button>
+          <button data-mode="register">Daftar</button>
+        </div>
+
+        <div id="loginIdWrap">
+          <label>Email atau Username</label>
+          <input type="text" id="loginId" placeholder="email atau username" autocomplete="username" />
+        </div>
+
+        <div id="regFields" class="hidden">
+          <label>Username</label>
+          <input type="text" id="regUsername" placeholder="username_kamu" autocomplete="username" />
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="kamu@email.com" autocomplete="email" />
+        </div>
+
+        <label>Password</label>
+        <div class="pw"><input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password" /><button type="button" class="eye" onclick="togglePw(this)"></button></div>
+
+        <div id="confirmWrap" class="hidden">
+          <label>Ulangi password</label>
+          <div class="pw"><input type="password" id="authPass2" placeholder="••••••••" autocomplete="new-password" /><button type="button" class="eye" onclick="togglePw(this)"></button></div>
+        </div>
+
+        <button class="btn btn-red" id="authBtn" style="margin-top:18px;">Masuk</button>
+        <button type="button" class="link-btn" id="forgotLink">Lupa password?</button>
+        <div class="status" id="authStatus"></div>
       </div>
 
-      <label>Email</label>
-      <input type="email" id="authEmail" placeholder="kamu@email.com" autocomplete="username" />
-      <label>Password</label>
-      <input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password" />
-      <div id="confirmWrap" class="hidden">
-        <label>Ulangi password</label>
-        <input type="password" id="authPass2" placeholder="••••••••" autocomplete="new-password" />
+      <!-- FORGOT -->
+      <div id="authForgot" class="hidden">
+        <h1 class="brand" style="font-size:18px; margin:0 0 4px;">Lupa password</h1>
+        <p style="font-size:12.5px; color:var(--muted); margin:0 0 10px;">Masukkan email atau username. Kami kirim link reset ke email kamu.</p>
+        <label>Email atau Username</label>
+        <input type="text" id="forgotId" placeholder="email atau username" />
+        <button class="btn btn-red" id="forgotBtn" style="margin-top:16px;">Kirim link reset</button>
+        <button type="button" class="link-btn" id="forgotBack">&larr; Kembali ke Masuk</button>
+        <div class="status" id="forgotStatus"></div>
       </div>
 
-      <button class="btn btn-red" id="authBtn" style="margin-top:18px;">Masuk</button>
-      <div class="status" id="authStatus"></div>
+      <!-- RECOVERY: set password baru -->
+      <div id="authRecovery" class="hidden">
+        <h1 class="brand" style="font-size:18px; margin:0 0 4px;">Buat password baru</h1>
+        <p style="font-size:12.5px; color:var(--muted); margin:0 0 10px;">Masukkan password baru untuk akunmu.</p>
+        <label>Password baru</label>
+        <div class="pw"><input type="password" id="recoverPass" placeholder="min 6 karakter" autocomplete="new-password" /><button type="button" class="eye" onclick="togglePw(this)"></button></div>
+        <label>Ulangi password baru</label>
+        <div class="pw"><input type="password" id="recoverPass2" placeholder="ulangi" autocomplete="new-password" /><button type="button" class="eye" onclick="togglePw(this)"></button></div>
+        <button class="btn btn-red" id="recoverBtn" style="margin-top:16px;">Simpan password baru</button>
+        <div class="status" id="recoverStatus"></div>
+      </div>
 
       <div class="auth-footer">
         Dibuat oleh <span class="brand">C3B1<span class="x">x</span>HUB</span> ·
@@ -284,7 +335,7 @@
       <div class="sub">Auto Lamaran</div>
     </div>
     <div class="right">
-      <span class="email" id="userEmail"></span>
+      <span class="email" id="userName"></span>
       <button class="btn btn-ghost" id="logoutBtn">Keluar</button>
     </div>
   </div>
@@ -292,6 +343,7 @@
   <div class="tabs">
     <button class="tab active" data-tab="kirim">Kirim Lamaran</button>
     <button class="tab" data-tab="pengaturan">Pengaturan</button>
+    <button class="tab" data-tab="profil">Profil</button>
     <button class="tab" data-tab="panduan">Panduan</button>
   </div>
 
@@ -407,6 +459,36 @@
       </div>
     </div>
 
+    <!-- ---------- TAB PROFIL ---------- -->
+    <div id="tabProfil" class="hidden">
+      <div style="max-width:520px; margin:0 auto;">
+        <div class="card">
+          <h2>Profil Akun</h2>
+
+          <div class="mini">
+            <label>Username</label>
+            <input type="text" id="pfUsername" placeholder="username_kamu" />
+            <button class="btn btn-red" id="pfUserBtn" style="margin-top:10px;">Simpan username</button>
+          </div>
+
+          <div class="mini">
+            <label>Email</label>
+            <input type="email" id="pfEmail" placeholder="kamu@email.com" />
+            <button class="btn btn-red" id="pfEmailBtn" style="margin-top:10px;">Simpan email</button>
+          </div>
+
+          <div class="mini">
+            <label>Ganti password</label>
+            <div class="pw"><input type="password" id="pfCurPass" placeholder="Password saat ini" autocomplete="current-password" /><button type="button" class="eye" onclick="togglePw(this)"></button></div>
+            <div class="pw" style="margin-top:8px;"><input type="password" id="pfNewPass" placeholder="Password baru (min 6)" autocomplete="new-password" /><button type="button" class="eye" onclick="togglePw(this)"></button></div>
+            <button class="btn btn-red" id="pfPassBtn" style="margin-top:10px;">Ganti password</button>
+          </div>
+
+          <div class="status" id="pfStatus"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ---------- TAB PANDUAN ---------- -->
     <div id="tabPanduan" class="hidden">
       <div class="tut">
@@ -501,7 +583,21 @@ function clearStatus(el){ el.className="status"; el.innerHTML=""; }
 // ------------------------------------------------------------------
 // INIT
 // ------------------------------------------------------------------
+let recoveryMode = false;
+
+const EYE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10 10 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9 9 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function togglePw(btn){
+  const inp = btn.previousElementSibling;
+  const showing = inp.type === "text";
+  inp.type = showing ? "password" : "text";
+  btn.innerHTML = showing ? EYE : EYE_OFF;
+}
+
 (async function init(){
+  document.querySelectorAll(".eye").forEach(b => { if(!b.innerHTML.trim()) b.innerHTML = EYE; });
+  if(location.hash.includes("type=recovery")) recoveryMode = true;
+
   try {
     const cfg = await fetch("/api/public-config").then(r=>r.json());
     if(!cfg.supabaseUrl || !cfg.supabaseAnonKey) throw new Error("Supabase belum dikonfigurasi di server (Environment Variables).");
@@ -515,17 +611,34 @@ function clearStatus(el){ el.className="status"; el.innerHTML=""; }
   session = data.session;
   render();
 
-  sb.auth.onAuthStateChange((_ev, s) => { session = s; render(); });
+  sb.auth.onAuthStateChange((ev, s) => {
+    if(ev === "PASSWORD_RECOVERY") recoveryMode = true;
+    session = s;
+    render();
+  });
 })();
 
+function showAuthView(v){
+  $("authMain").classList.toggle("hidden", v!=="main");
+  $("authForgot").classList.toggle("hidden", v!=="forgot");
+  $("authRecovery").classList.toggle("hidden", v!=="recovery");
+}
+
 async function render(){
+  if(recoveryMode){
+    show($("authScreen")); hide($("appScreen"));
+    showAuthView("recovery");
+    return;
+  }
   if(session){
     hide($("authScreen")); show($("appScreen"));
-    $("userEmail").textContent = session.user.email || "";
+    $("userName").textContent = session.user.email || "";
     rebuild();
     await loadConfig();
+    await loadProfile();
   } else {
     show($("authScreen")); hide($("appScreen"));
+    showAuthView("main");
   }
 }
 
@@ -544,38 +657,81 @@ $("authSeg").querySelectorAll("button").forEach(b => b.addEventListener("click",
   $("authSeg").querySelectorAll("button").forEach(x=>x.classList.remove("active"));
   b.classList.add("active");
   authMode = b.dataset.mode;
-  $("confirmWrap").classList.toggle("hidden", authMode!=="register");
-  $("authBtn").textContent = authMode==="register" ? "Daftar" : "Masuk";
+  const reg = authMode === "register";
+  $("loginIdWrap").classList.toggle("hidden", reg);
+  $("regFields").classList.toggle("hidden", !reg);
+  $("confirmWrap").classList.toggle("hidden", !reg);
+  $("forgotLink").classList.toggle("hidden", reg);
+  $("authBtn").textContent = reg ? "Daftar" : "Masuk";
   clearStatus($("authStatus"));
 }));
 
+async function applySession(s){
+  const { error } = await sb.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token });
+  if(error) throw error;
+}
+
 $("authBtn").addEventListener("click", async () => {
-  const email = $("authEmail").value.trim();
-  const pass = $("authPass").value;
-  if(!email || !pass) return setStatus($("authStatus"),"err","&#10005; Email dan password wajib diisi.");
-  if(authMode==="register" && pass !== $("authPass2").value)
-    return setStatus($("authStatus"),"err","&#10005; Password tidak sama.");
-
-  const btn = $("authBtn"); btn.disabled=true; const t=btn.textContent;
-  btn.innerHTML='<span class="spinner"></span> Memproses…';
-  setStatus($("authStatus"),"info","Memproses…");
-
+  const btn = $("authBtn"); const t = btn.textContent;
+  const setBusy = (on) => { btn.disabled = on; btn.innerHTML = on ? '<span class="spinner"></span> Memproses…' : t; };
   try {
-    if(authMode==="register"){
-      const { data, error } = await sb.auth.signUp({ email, password: pass });
-      if(error) throw error;
-      if(!data.session){
-        setStatus($("authStatus"),"ok","&#10003; Akun dibuat. Cek email untuk konfirmasi, lalu Masuk.");
-      }
+    const pass = $("authPass").value;
+    if(authMode === "register"){
+      const username = $("regUsername").value.trim();
+      const email = $("regEmail").value.trim();
+      if(!username || !email || !pass) return setStatus($("authStatus"),"err","&#10005; Username, email, dan password wajib diisi.");
+      if(pass !== $("authPass2").value) return setStatus($("authStatus"),"err","&#10005; Password tidak sama.");
+      setBusy(true); setStatus($("authStatus"),"info","Membuat akun…");
+      const r = await fetch("/api/register",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ username, email, password: pass }) }).then(r=>r.json());
+      if(!r.ok) throw new Error(r.error);
+      if(r.session) await applySession(r.session);
+      else setStatus($("authStatus"),"ok","&#10003; Akun dibuat. Silakan Masuk.");
     } else {
-      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error) throw error;
+      const identifier = $("loginId").value.trim();
+      if(!identifier || !pass) return setStatus($("authStatus"),"err","&#10005; Isi email/username dan password.");
+      setBusy(true); setStatus($("authStatus"),"info","Masuk…");
+      const r = await fetch("/api/login",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ identifier, password: pass }) }).then(r=>r.json());
+      if(!r.ok) throw new Error(r.error);
+      await applySession(r.session);
     }
   } catch(e){
     setStatus($("authStatus"),"err","&#10005; " + escapeHtml(e.message || "Gagal."));
   } finally {
-    btn.disabled=false; btn.textContent=t;
+    setBusy(false);
   }
+});
+
+// Lupa password
+$("forgotLink").addEventListener("click", () => { clearStatus($("forgotStatus")); showAuthView("forgot"); });
+$("forgotBack").addEventListener("click", () => showAuthView("main"));
+$("forgotBtn").addEventListener("click", async () => {
+  const identifier = $("forgotId").value.trim();
+  if(!identifier) return setStatus($("forgotStatus"),"err","&#10005; Isi email atau username.");
+  const btn = $("forgotBtn"); btn.disabled=true; const t=btn.textContent; btn.innerHTML='<span class="spinner"></span> Mengirim…';
+  try {
+    await fetch("/api/forgot",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ identifier, redirectTo: window.location.origin }) });
+    setStatus($("forgotStatus"),"ok","&#10003; Jika akun terdaftar, link reset sudah dikirim ke emailnya. Cek inbox/spam.");
+  } catch(e){
+    setStatus($("forgotStatus"),"err","&#10005; " + escapeHtml(e.message));
+  } finally { btn.disabled=false; btn.textContent=t; }
+});
+
+// Set password baru (recovery)
+$("recoverBtn").addEventListener("click", async () => {
+  const p1 = $("recoverPass").value, p2 = $("recoverPass2").value;
+  if(p1.length < 6) return setStatus($("recoverStatus"),"err","&#10005; Password minimal 6 karakter.");
+  if(p1 !== p2) return setStatus($("recoverStatus"),"err","&#10005; Password tidak sama.");
+  const btn = $("recoverBtn"); btn.disabled=true; const t=btn.textContent; btn.innerHTML='<span class="spinner"></span> Menyimpan…';
+  try {
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    if(error) throw error;
+    recoveryMode = false;
+    history.replaceState(null, "", window.location.pathname);
+    setStatus($("recoverStatus"),"ok","&#10003; Password berhasil diubah.");
+    render();
+  } catch(e){
+    setStatus($("recoverStatus"),"err","&#10005; " + escapeHtml(e.message));
+  } finally { btn.disabled=false; btn.textContent=t; }
 });
 
 $("logoutBtn").addEventListener("click", async () => { await sb.auth.signOut(); });
@@ -583,7 +739,7 @@ $("logoutBtn").addEventListener("click", async () => { await sb.auth.signOut(); 
 // ------------------------------------------------------------------
 // TABS
 // ------------------------------------------------------------------
-const PANELS = { kirim:"tabKirim", pengaturan:"tabPengaturan", panduan:"tabPanduan" };
+const PANELS = { kirim:"tabKirim", pengaturan:"tabPengaturan", profil:"tabProfil", panduan:"tabPanduan" };
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
   t.classList.add("active");
@@ -592,6 +748,41 @@ document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () =>
 }));
 $("gotoSettings").addEventListener("click", () => {
   document.querySelector('.tab[data-tab="pengaturan"]').click();
+});
+
+// ------------------------------------------------------------------
+// PROFIL
+// ------------------------------------------------------------------
+async function loadProfile(){
+  try {
+    const r = await authFetch("/api/profile").then(r=>r.json());
+    if(r.ok && r.profile){
+      $("pfUsername").value = r.profile.username || "";
+      $("pfEmail").value = r.profile.email || "";
+      if(r.profile.username) $("userName").textContent = r.profile.username;
+    }
+  } catch(e){ /* diamkan */ }
+}
+
+async function pfSave(btnId, statusEl, body, okMsg){
+  const btn = $(btnId); btn.disabled=true; const t=btn.textContent; btn.innerHTML='<span class="spinner"></span> Menyimpan…';
+  try {
+    const r = await authFetch("/api/profile",{ method:"POST", body: JSON.stringify(body) }).then(r=>r.json());
+    if(r.ok){ setStatus(statusEl,"ok","&#10003; " + okMsg); await loadProfile(); }
+    else setStatus(statusEl,"err","&#10005; " + escapeHtml(r.error));
+  } catch(e){ setStatus(statusEl,"err","&#10005; " + escapeHtml(e.message)); }
+  finally { btn.disabled=false; btn.textContent=t; }
+}
+
+$("pfUserBtn").addEventListener("click", () =>
+  pfSave("pfUserBtn", $("pfStatus"), { field:"username", username: $("pfUsername").value.trim() }, "Username diperbarui."));
+$("pfEmailBtn").addEventListener("click", () =>
+  pfSave("pfEmailBtn", $("pfStatus"), { field:"email", email: $("pfEmail").value.trim() }, "Email diperbarui."));
+$("pfPassBtn").addEventListener("click", () => {
+  const currentPassword = $("pfCurPass").value, newPassword = $("pfNewPass").value;
+  if(newPassword.length < 6) return setStatus($("pfStatus"),"err","&#10005; Password baru minimal 6 karakter.");
+  pfSave("pfPassBtn", $("pfStatus"), { field:"password", currentPassword, newPassword }, "Password diganti.");
+  $("pfCurPass").value=""; $("pfNewPass").value="";
 });
 
 // ------------------------------------------------------------------
