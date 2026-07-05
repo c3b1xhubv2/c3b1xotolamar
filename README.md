@@ -172,6 +172,7 @@ vercel dev               # buka http://localhost:3000
 | Simpan config error `ENCRYPTION_KEY harus 64 karakter` | Isi `ENCRYPTION_KEY` dengan hasil `openssl rand -hex 32`. |
 | Tes koneksi gagal `Invalid login` | App Password salah / pakai password biasa. Buat ulang App Password. |
 | Daftar gagal "Username sudah dipakai" | Ganti username lain (huruf/angka/_ , 3-20 karakter). |
+| Daftar gagal / error `updated_at ... schema cache` | Skema tabel `profiles` salah. Jalankan `supabase-reset-profiles.sql` di SQL Editor, hapus user uji lama di Authentication → Users, lalu daftar ulang. |
 | Email reset tidak datang | SMTP di Supabase belum diatur (Langkah 3.5), atau URL belum ada di Redirect URLs. Cek folder spam. |
 | `FUNCTION_PAYLOAD_TOO_LARGE` | Total upload > 4 MB → pakai opsi link untuk file besar. |
 

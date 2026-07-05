@@ -46,3 +46,6 @@ create policy "own profile"
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Paksa PostgREST memuat ulang skema.
+notify pgrst, 'reload schema';

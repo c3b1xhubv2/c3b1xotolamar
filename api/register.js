@@ -34,10 +34,13 @@ module.exports = async (req, res) => {
     if (cErr) {
       console.error("createUser error:", cErr);
       const em = errMsg(cErr);
+      const emptyish = !em || em === "{}" || em === "[object Object]" || em === "Unknown error";
       let msg;
       if (/already|registered|exists/i.test(em)) msg = "Email sudah terdaftar.";
-      else if (/not allowed|forbidden|403|401|invalid|jwt|api key|apikey|role/i.test(em))
-        msg = "Server tidak berwenang membuat akun. Pastikan SUPABASE_SERVICE_ROLE_KEY di Vercel diisi service_role key (bukan anon), lalu redeploy.";
+      else if (/not allowed|forbidden|403|401|api key|apikey|role|jwt/i.test(em))
+        msg = "Server tidak berwenang membuat akun. Pastikan SUPABASE_SERVICE_ROLE_KEY di Vercel = service_role key (bukan anon), lalu redeploy.";
+      else if (emptyish || /database|trigger|constraint|column|schema|relation/i.test(em))
+        msg = "Gagal membuat akun di database. Kemungkinan skema tabel 'profiles' salah atau ada trigger auto-create. Jalankan supabase-reset-profiles.sql (lihat README).";
       else msg = "Gagal daftar: " + em;
       return res.status(400).json({ ok: false, error: msg });
     }

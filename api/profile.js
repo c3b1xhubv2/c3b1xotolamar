@@ -1,5 +1,5 @@
 const { serviceClient, anonClient, getUserFromReq } = require("../lib/supa");
-const { readJson } = require("../lib/body");
+const { readJson, errMsg } = require("../lib/body");
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
@@ -35,8 +35,9 @@ module.exports = async (req, res) => {
         .eq("username_lower", username.toLowerCase()).neq("user_id", user.id).maybeSingle();
       if (taken) return res.status(400).json({ ok: false, error: "Username sudah dipakai." });
       const { error } = await admin
-        .from("profiles").update({ username, updated_at: new Date().toISOString() }).eq("user_id", user.id);
-      if (error) return res.status(500).json({ ok: false, error: error.message });
+        .from("profiles")
+        .upsert({ user_id: user.id, username, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (error) return res.status(500).json({ ok: false, error: errMsg(error) });
       return res.status(200).json({ ok: true });
     }
 
@@ -45,7 +46,7 @@ module.exports = async (req, res) => {
       if (!email.includes("@")) return res.status(400).json({ ok: false, error: "Email tidak valid." });
       const { error: uErr } = await admin.auth.admin.updateUserById(user.id, { email, email_confirm: true });
       if (uErr) {
-        const msg = /already|registered|exists/i.test(uErr.message) ? "Email sudah dipakai akun lain." : uErr.message;
+        const msg = /already|registered|exists/i.test(errMsg(uErr)) ? "Email sudah dipakai akun lain." : errMsg(uErr);
         return res.status(400).json({ ok: false, error: msg });
       }
       await admin.from("profiles").update({ email, updated_at: new Date().toISOString() }).eq("user_id", user.id);
@@ -62,7 +63,7 @@ module.exports = async (req, res) => {
       const { error: vErr } = await anon.auth.signInWithPassword({ email: user.email, password: currentPassword });
       if (vErr) return res.status(400).json({ ok: false, error: "Password saat ini salah." });
       const { error } = await admin.auth.admin.updateUserById(user.id, { password: newPassword });
-      if (error) return res.status(500).json({ ok: false, error: error.message });
+      if (error) return res.status(500).json({ ok: false, error: errMsg(error) });
       return res.status(200).json({ ok: true });
     }
 
