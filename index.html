@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Auto Lamaran · C3B1xHUB</title>
+<link rel="icon" href="/assets/profile.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #08080b;
+    --bg2: #0c0c11;
+    --panel: #131318;
+    --panel2: #1a1a21;
+    --border: #24242e;
+    --text: #f3f3f6;
+    --muted: #8b8b98;
+    --red: #ff2b41;
+    --red2: #d31128;
+    --red-soft: rgba(255,43,65,.12);
+    --red-glow: rgba(255,43,65,.30);
+    --ok: #35d07f;
+    --err: #ff5c6c;
+    --radius: 14px;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --display: "Sora", system-ui, sans-serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(900px 500px at 85% -8%, rgba(255,43,65,.16) 0%, transparent 55%),
+      radial-gradient(700px 500px at 5% 110%, rgba(255,43,65,.08) 0%, transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.55;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--red); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .hidden { display: none !important; }
+
+  /* ---------- brand wordmark ---------- */
+  .brand { font-family: var(--display); font-weight: 800; letter-spacing: .5px; }
+  .brand .x { color: var(--red); }
+
+  /* ---------- buttons / inputs ---------- */
+  input, select, textarea {
+    width: 100%; padding: 12px 14px;
+    background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px;
+    font-family: var(--sans); font-size: 14px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--red); box-shadow: 0 0 0 3px var(--red-soft);
+  }
+  select { appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b8b98' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  label { display: block; font-size: 13px; margin: 14px 0 6px; font-weight: 600; }
+  label .req { color: var(--red); }
+  .hint { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer;
+    font-family: var(--sans); font-size: 14px; font-weight: 700; transition: .15s; width: 100%;
+  }
+  .btn-red {
+    background: linear-gradient(180deg, var(--red), var(--red2)); color: #fff;
+    box-shadow: 0 6px 20px -8px var(--red-glow);
+  }
+  .btn-red:hover { filter: brightness(1.07); }
+  .btn-red:disabled { opacity: .55; cursor: not-allowed; filter: none; }
+  .btn-ghost { background: var(--panel2); border: 1px solid var(--border); color: var(--text); width: auto; }
+  .btn-ghost:hover { border-color: var(--red); }
+
+  .status { margin-top: 14px; padding: 11px 14px; border-radius: 10px; font-size: 13px; display: none; }
+  .status.show { display: block; }
+  .status.ok  { background: rgba(53,208,127,.10); border: 1px solid rgba(53,208,127,.4); color: #7ff0b3; }
+  .status.err { background: rgba(255,92,108,.10); border: 1px solid rgba(255,92,108,.4); color: #ff9aa3; }
+  .status.info{ background: var(--red-soft); border: 1px solid rgba(255,43,65,.4); color: #ffb3bd; }
+
+  .spinner { width: 14px; height: 14px; border: 2px solid #ffffff55; border-top-color: #fff;
+    border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ================= AUTH ================= */
+  .auth-wrap { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+  .auth-card {
+    width: 100%; max-width: 420px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
+    box-shadow: 0 30px 80px -40px #000;
+  }
+  .auth-banner { position: relative; height: 130px; background: #000; overflow: hidden; }
+  .auth-banner img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+  .auth-banner::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, var(--panel) 100%); }
+  .auth-body { padding: 22px 24px 24px; }
+  .auth-head { display: flex; align-items: center; gap: 12px; margin-top: -44px; margin-bottom: 14px; position: relative; }
+  .auth-avatar { width: 62px; height: 62px; border-radius: 50%; border: 3px solid var(--red);
+    box-shadow: 0 0 22px -4px var(--red-glow); object-fit: cover; background: #000; }
+  .auth-head h1 { font-family: var(--display); font-size: 20px; margin: 0; }
+  .auth-head p { margin: 0; font-size: 12px; color: var(--muted); }
+
+  .seg { display: flex; gap: 4px; background: var(--panel2); padding: 4px; border-radius: 10px;
+    border: 1px solid var(--border); margin-bottom: 4px; }
+  .seg button { flex: 1; padding: 9px; border: none; border-radius: 7px; cursor: pointer;
+    background: transparent; color: var(--muted); font-weight: 700; font-size: 13px; font-family: var(--sans); transition: .15s; }
+  .seg button.active { background: var(--red); color: #fff; }
+
+  .auth-footer { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 18px; }
+
+  /* ================= APP ================= */
+  .topbar {
+    display: flex; align-items: center; gap: 12px; padding: 14px 22px;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+    background: rgba(8,8,11,.82); backdrop-filter: blur(10px);
+  }
+  .topbar .avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--red); object-fit: cover; }
+  .topbar .title { font-family: var(--display); font-weight: 800; font-size: 15px; line-height: 1; }
+  .topbar .sub { font-size: 11px; color: var(--muted); }
+  .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .topbar .email { font-size: 12px; color: var(--muted); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .tabs { display: flex; gap: 6px; max-width: 1140px; margin: 18px auto 0; padding: 0 22px; }
+  .tab { padding: 9px 16px; border-radius: 9px 9px 0 0; cursor: pointer; font-weight: 700; font-size: 13px;
+    color: var(--muted); border: 1px solid transparent; border-bottom: none; background: transparent; }
+  .tab.active { color: var(--text); background: var(--panel); border-color: var(--border); }
+
+  .container { max-width: 1140px; margin: 0 auto; padding: 18px 22px 40px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } .tabs { padding: 0 14px; } .container { padding: 16px 14px 36px; } }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .card h2 { font-family: var(--display); font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--muted); margin: 0 0 16px; font-weight: 700; }
+
+  .notice { background: var(--red-soft); border: 1px solid rgba(255,43,65,.35); color: #ffb3bd;
+    padding: 12px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px; }
+  .notice button { margin-left: auto; }
+
+  /* attachments */
+  .drop { border: 1.5px dashed var(--border); border-radius: 11px; padding: 18px; text-align: center;
+    cursor: pointer; transition: .15s; background: var(--panel2); }
+  .drop:hover, .drop.drag { border-color: var(--red); background: var(--red-soft); }
+  .drop .big { font-size: 13px; font-weight: 600; }
+  .drop .small { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .filechip { display: flex; align-items: center; gap: 10px; margin-top: 8px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 13px; }
+  .filechip .badge { background: var(--red); color: #fff; font-size: 10px; font-weight: 800; padding: 3px 6px; border-radius: 4px; }
+  .filechip .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .filechip .sz { margin-left: auto; color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .filechip .x { margin-left: 6px; cursor: pointer; color: var(--muted); font-weight: 700; }
+  .filechip .x:hover { color: var(--red); }
+  .link-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .link-row .lurl { flex: 2 1 0; min-width: 0; }
+  .link-row .lname { flex: 1 1 0; min-width: 0; }
+  .link-row .x { flex: 0 0 auto; width: 42px; height: 44px; background: var(--panel2);
+    border: 1px solid var(--border); color: var(--muted); border-radius: 9px; cursor: pointer; font-weight: 700; }
+  .link-row .x:hover { border-color: var(--red); color: var(--red); }
+
+  details { margin-top: 16px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  summary { cursor: pointer; padding: 11px 14px; font-size: 13px; font-weight: 600; background: var(--panel2);
+    list-style: none; user-select: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "\25B8 "; color: var(--muted); }
+  details[open] summary::before { content: "\25BE "; }
+  .details-body { padding: 4px 14px 14px; }
+
+  .preview-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .email-preview { background: var(--panel2); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
+  .email-preview .subj { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; }
+  .email-preview .subj .lbl { color: var(--muted); font-weight: 500; }
+  .email-preview textarea { border: none; background: transparent; border-radius: 0; font-family: var(--mono);
+    font-size: 13px; line-height: 1.7; min-height: 340px; }
+  .email-preview textarea:focus { box-shadow: none; }
+  .attach-line { display: flex; gap: 8px; padding: 11px 14px; border-top: 1px solid var(--border);
+    font-size: 12.5px; color: var(--muted); }
+  .attach-line b { color: var(--text); font-weight: 600; word-break: break-word; }
+
+  .app-footer { text-align: center; font-size: 12px; color: var(--muted); padding: 24px; border-top: 1px solid var(--border); }
+  .app-footer .brand { color: var(--text); }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .dot.err { background: var(--err); box-shadow: 0 0 8px var(--err); }
+</style>
+</head>
+<body>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-banner"><img src="/assets/banner.gif" alt="C3B1xHUB" /></div>
+    <div class="auth-body">
+      <div class="auth-head">
+        <img class="auth-avatar" src="/assets/profile.png" alt="logo" />
+        <div>
+          <h1 class="brand">C3B1<span class="x">X</span>HUB</h1>
+          <p>Auto Lamaran — kirim lamaran dari mana saja</p>
+        </div>
+      </div>
+
+      <div class="seg" id="authSeg">
+        <button data-mode="login" class="active">Masuk</button>
+        <button data-mode="register">Daftar</button>
+      </div>
+
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="kamu@email.com" autocomplete="username" />
+      <label>Password</label>
+      <input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password" />
+      <div id="confirmWrap" class="hidden">
+        <label>Ulangi password</label>
+        <input type="password" id="authPass2" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+
+      <button class="btn btn-red" id="authBtn" style="margin-top:18px;">Masuk</button>
+      <div class="status" id="authStatus"></div>
+
+      <div class="auth-footer">
+        Dibuat oleh <span class="brand">C3B1<span class="x">x</span>HUB</span> ·
+        <a href="https://guns.lol/c3b1xhub" target="_blank" rel="noopener">guns.lol/c3b1xhub</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP SCREEN ===================== -->
+<div id="appScreen" class="hidden">
+  <div class="topbar">
+    <img class="avatar" src="/assets/profile.png" alt="logo" />
+    <div>
+      <div class="title brand">C3B1<span class="x">X</span>HUB</div>
+      <div class="sub">Auto Lamaran</div>
+    </div>
+    <div class="right">
+      <span class="email" id="userEmail"></span>
+      <button class="btn btn-ghost" id="logoutBtn">Keluar</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="kirim">Kirim Lamaran</button>
+    <button class="tab" data-tab="pengaturan">Pengaturan</button>
+  </div>
+
+  <div class="container">
+
+    <!-- ---------- TAB KIRIM ---------- -->
+    <div id="tabKirim">
+      <div class="notice hidden" id="cfgNotice">
+        ⚠ Email pengirim belum diatur. Isi dulu di Pengaturan agar bisa mengirim.
+        <button class="btn btn-ghost" id="gotoSettings">Buka Pengaturan</button>
+      </div>
+
+      <div class="grid2">
+        <!-- form -->
+        <div class="card">
+          <h2>Data Lamaran</h2>
+
+          <label>Email tujuan <span class="req">*</span></label>
+          <input type="email" id="to" placeholder="hrd@perusahaan.com" />
+          <div class="hint">Bisa lebih dari satu, pisahkan dengan koma.</div>
+
+          <label>Subject email <span class="req">*</span></label>
+          <input type="text" id="subject" placeholder="Lamaran Pekerjaan — Bartender" />
+
+          <label>Posisi yang dilamar <span class="req">*</span></label>
+          <input type="text" id="posisi" placeholder="mis. Bartender" />
+
+          <label>Deskripsi keahlian</label>
+          <select id="skillPreset">
+            <option value="bartender">Bartender (teks otomatis)</option>
+            <option value="engineer">Software/Hardware Engineer (teks otomatis)</option>
+            <option value="custom">Tulis sendiri…</option>
+            <option value="none">Kosongkan (tanpa deskripsi)</option>
+          </select>
+          <textarea id="customDesc" rows="4" style="margin-top:10px; display:none;"
+            placeholder="Tulis deskripsi keahlian kamu di sini…"></textarea>
+
+          <details>
+            <summary>Data pengirim (tanda tangan)</summary>
+            <div class="details-body">
+              <label>Nama</label>
+              <input type="text" id="sigNama" value="M. Febri Kurniawan" />
+              <label>No. HP</label>
+              <input type="text" id="sigTelp" value="089523000629" />
+              <label>Email</label>
+              <input type="text" id="sigEmail" value="opcebi@gmail.com" />
+            </div>
+          </details>
+
+          <label style="margin-top:18px;">Lampiran CV / Lamaran Kerja <span class="req">*</span></label>
+          <div class="hint" style="margin-top:0; margin-bottom:8px;">
+            Bisa banyak file dan/atau banyak link. Total upload maks ~4 MB (batas Vercel) — file besar pakai link.
+          </div>
+          <div class="drop" id="dropZone">
+            <div class="big">Klik untuk pilih file (bisa banyak), atau seret ke sini</div>
+            <div class="small">PDF / DOC / gambar</div>
+          </div>
+          <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" multiple hidden />
+          <div id="fileList"></div>
+
+          <div id="linkList"></div>
+          <button type="button" class="btn btn-ghost" id="addLinkBtn" style="margin-top:10px;">+ Tambah link file</button>
+        </div>
+
+        <!-- preview -->
+        <div class="card">
+          <div class="preview-head">
+            <h2 style="margin:0;">Preview Email</h2>
+            <button class="btn btn-ghost" id="rebuildBtn">&#8635; Susun ulang</button>
+          </div>
+          <div class="email-preview">
+            <div class="subj"><span class="lbl">Subjek:&nbsp;</span><span id="subjPreview">—</span></div>
+            <textarea id="bodyArea" spellcheck="false"></textarea>
+            <div class="attach-line">&#128206; Lampiran: <b id="attachName">belum ada</b></div>
+          </div>
+          <button class="btn btn-red" id="sendBtn" style="margin-top:16px;">Kirim email</button>
+          <div class="status" id="sendStatus"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- TAB PENGATURAN ---------- -->
+    <div id="tabPengaturan" class="hidden">
+      <div style="max-width:520px; margin:0 auto;">
+        <div class="card">
+          <h2>Konfigurasi Email Pengirim</h2>
+          <p class="hint" style="margin-top:-8px; margin-bottom:6px;">
+            Tersimpan aman di akunmu (App Password dienkripsi). Butuh App Password Gmail, bukan password biasa.
+          </p>
+
+          <label>Email Gmail pengirim <span class="req">*</span></label>
+          <input type="email" id="cfgUser" placeholder="opcebi@gmail.com" />
+
+          <label>App Password Gmail <span class="req">*</span></label>
+          <input type="password" id="cfgPass" placeholder="16 karakter dari Google" autocomplete="new-password" />
+          <div class="hint" id="cfgPassHint">
+            Buat di myaccount.google.com/apppasswords (butuh Verifikasi 2 Langkah).
+          </div>
+
+          <label>Nama tampilan pengirim</label>
+          <input type="text" id="cfgFrom" placeholder="M. Febri Kurniawan" />
+
+          <div style="display:flex; gap:10px; margin-top:18px;">
+            <button class="btn btn-ghost" id="cfgTestBtn" style="flex:0 0 auto;">Tes koneksi</button>
+            <button class="btn btn-red" id="cfgSaveBtn">Simpan konfigurasi</button>
+          </div>
+          <div class="status" id="cfgStatus"></div>
+
+          <div style="margin-top:16px; font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:8px;">
+            <span class="dot" id="cfgDot"></span><span id="cfgState">Belum ada konfigurasi tersimpan</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="app-footer">
+    Dibuat oleh <span class="brand">C3B1<span class="x">x</span>HUB</span> ·
+    <a href="https://guns.lol/c3b1xhub" target="_blank" rel="noopener">guns.lol/c3b1xhub</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+let sb = null;               // supabase client
+let session = null;          // sesi aktif
+let selectedFiles = [];
+
+const $ = (id) => document.getElementById(id);
+const MAX_UPLOAD = 4.2 * 1024 * 1024; // batas aman payload Vercel (~4.5MB)
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+function fmtSize(b){ if(b<1024) return b+" B"; if(b<1048576) return (b/1024).toFixed(0)+" KB"; return (b/1048576).toFixed(1)+" MB"; }
+function show(el){ el.classList.remove("hidden"); }
+function hide(el){ el.classList.add("hidden"); }
+function setStatus(el, type, html){ el.className="status show "+type; el.innerHTML=html; }
+function clearStatus(el){ el.className="status"; el.innerHTML=""; }
+
+// ------------------------------------------------------------------
+// INIT
+// ------------------------------------------------------------------
+(async function init(){
+  try {
+    const cfg = await fetch("/api/public-config").then(r=>r.json());
+    if(!cfg.supabaseUrl || !cfg.supabaseAnonKey) throw new Error("Supabase belum dikonfigurasi di server (Environment Variables).");
+    sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  } catch(e){
+    setStatus($("authStatus"), "err", "&#10005; " + escapeHtml(e.message));
+    return;
+  }
+
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  render();
+
+  sb.auth.onAuthStateChange((_ev, s) => { session = s; render(); });
+})();
+
+async function render(){
+  if(session){
+    hide($("authScreen")); show($("appScreen"));
+    $("userEmail").textContent = session.user.email || "";
+    rebuild();
+    await loadConfig();
+  } else {
+    show($("authScreen")); hide($("appScreen"));
+  }
+}
+
+// helper: fetch dengan token
+async function authFetch(url, opts={}){
+  const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+  if(session) headers["Authorization"] = "Bearer " + session.access_token;
+  return fetch(url, Object.assign({}, opts, { headers }));
+}
+
+// ------------------------------------------------------------------
+// AUTH UI
+// ------------------------------------------------------------------
+let authMode = "login";
+$("authSeg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+  $("authSeg").querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  authMode = b.dataset.mode;
+  $("confirmWrap").classList.toggle("hidden", authMode!=="register");
+  $("authBtn").textContent = authMode==="register" ? "Daftar" : "Masuk";
+  clearStatus($("authStatus"));
+}));
+
+$("authBtn").addEventListener("click", async () => {
+  const email = $("authEmail").value.trim();
+  const pass = $("authPass").value;
+  if(!email || !pass) return setStatus($("authStatus"),"err","&#10005; Email dan password wajib diisi.");
+  if(authMode==="register" && pass !== $("authPass2").value)
+    return setStatus($("authStatus"),"err","&#10005; Password tidak sama.");
+
+  const btn = $("authBtn"); btn.disabled=true; const t=btn.textContent;
+  btn.innerHTML='<span class="spinner"></span> Memproses…';
+  setStatus($("authStatus"),"info","Memproses…");
+
+  try {
+    if(authMode==="register"){
+      const { data, error } = await sb.auth.signUp({ email, password: pass });
+      if(error) throw error;
+      if(!data.session){
+        setStatus($("authStatus"),"ok","&#10003; Akun dibuat. Cek email untuk konfirmasi, lalu Masuk.");
+      }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if(error) throw error;
+    }
+  } catch(e){
+    setStatus($("authStatus"),"err","&#10005; " + escapeHtml(e.message || "Gagal."));
+  } finally {
+    btn.disabled=false; btn.textContent=t;
+  }
+});
+
+$("logoutBtn").addEventListener("click", async () => { await sb.auth.signOut(); });
+
+// ------------------------------------------------------------------
+// TABS
+// ------------------------------------------------------------------
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  const tab = t.dataset.tab;
+  $("tabKirim").classList.toggle("hidden", tab!=="kirim");
+  $("tabPengaturan").classList.toggle("hidden", tab!=="pengaturan");
+}));
+$("gotoSettings").addEventListener("click", () => {
+  document.querySelector('.tab[data-tab="pengaturan"]').click();
+});
+
+// ------------------------------------------------------------------
+// CONFIG (Pengaturan)
+// ------------------------------------------------------------------
+async function loadConfig(){
+  try {
+    const r = await authFetch("/api/config").then(r=>r.json());
+    if(r.ok && r.config){
+      $("cfgUser").value = r.config.email_user || "";
+      $("cfgFrom").value = r.config.from_name || "";
+      if(!$("sigEmail").value.trim()) $("sigEmail").value = r.config.email_user || "";
+      $("cfgDot").className = "dot ok";
+      $("cfgState").textContent = "Tersimpan: " + r.config.email_user;
+      $("cfgPass").placeholder = "•••••••• (biarkan kosong jika tidak diubah)";
+      hide($("cfgNotice"));
+    } else {
+      $("cfgDot").className = "dot err";
+      $("cfgState").textContent = "Belum ada konfigurasi tersimpan";
+      show($("cfgNotice"));
+    }
+  } catch(e){ /* diamkan */ }
+}
+
+$("cfgSaveBtn").addEventListener("click", async () => {
+  const email_user = $("cfgUser").value.trim();
+  const email_pass = $("cfgPass").value.trim();
+  const from_name = $("cfgFrom").value.trim();
+  if(!email_user) return setStatus($("cfgStatus"),"err","&#10005; Email Gmail wajib diisi.");
+
+  const btn=$("cfgSaveBtn"); btn.disabled=true; const t=btn.textContent; btn.innerHTML='<span class="spinner"></span> Menyimpan…';
+  try {
+    const r = await authFetch("/api/config",{ method:"POST", body: JSON.stringify({ email_user, email_pass, from_name }) }).then(r=>r.json());
+    if(r.ok){ setStatus($("cfgStatus"),"ok","&#10003; Konfigurasi tersimpan."); $("cfgPass").value=""; await loadConfig(); }
+    else setStatus($("cfgStatus"),"err","&#10005; " + escapeHtml(r.error));
+  } catch(e){ setStatus($("cfgStatus"),"err","&#10005; " + escapeHtml(e.message)); }
+  finally { btn.disabled=false; btn.textContent=t; }
+});
+
+$("cfgTestBtn").addEventListener("click", async () => {
+  setStatus($("cfgStatus"),"info","Mengetes koneksi Gmail…");
+  try {
+    const r = await authFetch("/api/verify").then(r=>r.json());
+    if(r.ok) setStatus($("cfgStatus"),"ok","&#10003; Koneksi Gmail berhasil (" + escapeHtml(r.from) + ").");
+    else setStatus($("cfgStatus"),"err","&#10005; " + escapeHtml(r.error));
+  } catch(e){ setStatus($("cfgStatus"),"err","&#10005; " + escapeHtml(e.message)); }
+});
+
+// ------------------------------------------------------------------
+// TEMPLATE BODY
+// ------------------------------------------------------------------
+const PRESETS = {
+  bartender: { posisi:"Bartender",
+    desc:"Saya mahir menjadi bartender karena saya pernah menjadi waiters kurang lebih 7/8 bulan lebih, membuat minuman jenis mocktail atau non alkohol, jenis teh/kopi seperti kopi/teh tarik, jenis soda, atau yang lainnya. Bisa juga dibilang saya bisa diindustri F&B Front Service seperti Waiters/Server," },
+  engineer: { posisi:"Software/Hardware Engineer",
+    desc:"Saya mahir menjadi software/hardware engineer karena saya suka belajar dalam dunia teknologi dan digital, saya dari kelas 1 smp sudah bisa menggunakan komputer, merakit komputer, mencari masalah didalam komputer seperti terkena virus, black screen, dan lainnya. Bisa juga dibilang saya bisa didunia industri bot development, web development, karena saya bisa dasar membuat bot seperti bot discord, dan bisa dasar membuat website portofolio, website one page profile, server one page informasi, dan lainnya." }
+};
+function currentDesc(){
+  const p=$("skillPreset").value;
+  if(p==="bartender"||p==="engineer") return PRESETS[p].desc;
+  if(p==="custom") return $("customDesc").value.trim();
+  return "";
+}
+function buildBody(){
+  const posisi=$("posisi").value.trim()||"(posisi belum diisi)";
+  const desc=currentDesc(); const dp=desc?desc+" ":"";
+  const nama=$("sigNama").value.trim(), telp=$("sigTelp").value.trim(), email=$("sigEmail").value.trim();
+  return "Kepada Yth hrd.\n\nDengan hormat,\n\n"+
+    "Saya bermaksud melamar posisi sebagai "+posisi+". "+dp+
+    "Saya sangat antusias untuk belajar, bekerja keras, dan memperbanyak pengalaman serta ilmu saya.\n\n"+
+    "Dengan lamaran ini, saya melampirkan file PDF yang berisi CV dan dokumen pendukung lainnya sebagai bahan pertimbangan, Saya sangat berharap dapat diberikan kesempatan untuk bergabung dan berkontribusi.\n\n"+
+    "Terima kasih atas perhatian dan kesempatan yang diberikan.\n\nHormat saya,\n\n"+
+    nama+"\n"+telp+"\n"+email;
+}
+function rebuild(){ $("bodyArea").value=buildBody(); updateSubjPreview(); }
+function updateSubjPreview(){ $("subjPreview").textContent=$("subject").value.trim()||"—"; }
+
+$("skillPreset").addEventListener("change", ()=>{
+  const p=$("skillPreset").value;
+  $("customDesc").style.display = p==="custom"?"block":"none";
+  if(PRESETS[p]){
+    if(!$("posisi").value.trim()) $("posisi").value=PRESETS[p].posisi;
+    if(!$("subject").value.trim()) $("subject").value="Lamaran Pekerjaan — "+PRESETS[p].posisi;
+  }
+  rebuild();
+});
+["posisi","sigNama","sigTelp","sigEmail","customDesc"].forEach(id=>$(id).addEventListener("input",rebuild));
+$("subject").addEventListener("input",updateSubjPreview);
+$("rebuildBtn").addEventListener("click",rebuild);
+
+// ------------------------------------------------------------------
+// LAMPIRAN
+// ------------------------------------------------------------------
+const dropZone=$("dropZone");
+dropZone.addEventListener("click",()=>$("fileInput").click());
+$("fileInput").addEventListener("change",e=>{ addFiles(e.target.files); $("fileInput").value=""; });
+["dragover","dragenter"].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.classList.add("drag");}));
+["dragleave","drop"].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.classList.remove("drag");}));
+dropZone.addEventListener("drop",e=>addFiles(e.dataTransfer.files));
+
+function addFiles(list){
+  for(const f of list){
+    if(!selectedFiles.some(x=>x.name===f.name && x.size===f.size)) selectedFiles.push(f);
+  }
+  renderFiles();
+}
+function renderFiles(){
+  const box=$("fileList"); box.innerHTML="";
+  selectedFiles.forEach((f,i)=>{
+    const chip=document.createElement("div"); chip.className="filechip";
+    chip.innerHTML='<span class="badge">FILE</span><span class="nm">'+escapeHtml(f.name)+
+      '</span><span class="sz">'+fmtSize(f.size)+'</span><span class="x" data-i="'+i+'">&#10005;</span>';
+    box.appendChild(chip);
+  });
+  box.querySelectorAll(".x").forEach(x=>x.onclick=()=>{ selectedFiles.splice(+x.dataset.i,1); renderFiles(); });
+  updateAttachName();
+}
+$("addLinkBtn").addEventListener("click",()=>addLinkRow());
+function addLinkRow(){
+  const row=document.createElement("div"); row.className="link-row";
+  row.innerHTML='<input type="url" class="lurl" placeholder="https://drive.google.com/file/d/…/view" />'+
+    '<input type="text" class="lname" placeholder="Nama file (opsional)" />'+
+    '<button type="button" class="x" title="Hapus">&#10005;</button>';
+  row.querySelector(".x").onclick=()=>{ row.remove(); updateAttachName(); };
+  row.querySelectorAll("input").forEach(i=>i.addEventListener("input",updateAttachName));
+  $("linkList").appendChild(row); updateAttachName();
+}
+function currentLinks(){
+  return [...$("linkList").querySelectorAll(".link-row")].map(r=>({
+    url:r.querySelector(".lurl").value.trim(), name:r.querySelector(".lname").value.trim()
+  })).filter(l=>l.url);
+}
+function updateAttachName(){
+  const names=[...selectedFiles.map(f=>f.name), ...currentLinks().map(l=>l.name||"(dari link)")];
+  $("attachName").textContent = names.length ? names.join(", ") : "belum ada";
+}
+
+function fileToB64(file){
+  return new Promise((res,rej)=>{ const r=new FileReader();
+    r.onload=()=>res(String(r.result).split(",")[1]); r.onerror=()=>rej(new Error("Gagal membaca "+file.name)); r.readAsDataURL(file); });
+}
+
+// ------------------------------------------------------------------
+// KIRIM
+// ------------------------------------------------------------------
+$("sendBtn").addEventListener("click", async () => {
+  const to=$("to").value.trim(), subject=$("subject").value.trim(), text=$("bodyArea").value.trim();
+  const st=$("sendStatus");
+  if(!to) return setStatus(st,"err","&#10005; Email tujuan belum diisi.");
+  if(!subject) return setStatus(st,"err","&#10005; Subject belum diisi.");
+  if(!text) return setStatus(st,"err","&#10005; Isi email masih kosong.");
+  const links=currentLinks();
+  if(selectedFiles.length===0 && links.length===0)
+    return setStatus(st,"err","&#10005; Lampiran wajib: upload minimal 1 file atau isi minimal 1 link.");
+
+  const totalBytes=selectedFiles.reduce((a,f)=>a+f.size,0);
+  if(totalBytes*1.37 > MAX_UPLOAD)
+    return setStatus(st,"err","&#10005; Total file terlalu besar (batas ~4 MB di Vercel). Untuk file besar, pakai opsi <b>link</b>.");
+
+  const btn=$("sendBtn"); btn.disabled=true; const t=btn.textContent; btn.innerHTML='<span class="spinner"></span> Mengirim…';
+  setStatus(st,"info","Menyiapkan lampiran &amp; mengirim…");
+
+  try {
+    const files=[];
+    for(const f of selectedFiles){
+      files.push({ filename:f.name, contentB64: await fileToB64(f), contentType: f.type || "application/octet-stream" });
+    }
+    const r = await authFetch("/api/send",{ method:"POST", body: JSON.stringify({ to, subject, text, files, links }) }).then(r=>r.json());
+    if(r.ok){
+      setStatus(st,"ok","&#10003; Email terkirim ke <b>"+escapeHtml(to)+"</b> dengan <b>"+r.count+" lampiran</b>:<br>"+escapeHtml(r.filenames.join(", ")));
+    } else {
+      setStatus(st,"err","&#10005; Gagal: "+escapeHtml(r.error));
+    }
+  } catch(e){
+    setStatus(st,"err","&#10005; Error: "+escapeHtml(e.message));
+  } finally {
+    btn.disabled=false; btn.textContent=t;
+  }
+});
+</script>
+</body>
+</html>
