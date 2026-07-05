@@ -1,5 +1,5 @@
 const { serviceClient, anonClient } = require("../lib/supa");
-const { readJson } = require("../lib/body");
+const { readJson, errMsg } = require("../lib/body");
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
 
     const admin = serviceClient();
 
-    // Cek username unik (case-insensitive)
+    // Cek username unik (case-insensitive). Kalau tabel belum ada, error-nya ditangani di insert.
     const { data: taken } = await admin
       .from("profiles").select("user_id").eq("username_lower", username.toLowerCase()).maybeSingle();
     if (taken) return res.status(400).json({ ok: false, error: "Username sudah dipakai." });
@@ -32,7 +32,13 @@ module.exports = async (req, res) => {
       email, password, email_confirm: true,
     });
     if (cErr) {
-      const msg = /already|registered|exists/i.test(cErr.message) ? "Email sudah terdaftar." : cErr.message;
+      console.error("createUser error:", cErr);
+      const em = errMsg(cErr);
+      let msg;
+      if (/already|registered|exists/i.test(em)) msg = "Email sudah terdaftar.";
+      else if (/not allowed|forbidden|403|401|invalid|jwt|api key|apikey|role/i.test(em))
+        msg = "Server tidak berwenang membuat akun. Pastikan SUPABASE_SERVICE_ROLE_KEY di Vercel diisi service_role key (bukan anon), lalu redeploy.";
+      else msg = "Gagal daftar: " + em;
       return res.status(400).json({ ok: false, error: msg });
     }
     const uid = created.user.id;
@@ -40,8 +46,14 @@ module.exports = async (req, res) => {
     // Simpan profil
     const { error: pErr } = await admin.from("profiles").insert({ user_id: uid, username, email });
     if (pErr) {
-      await admin.auth.admin.deleteUser(uid); // rollback agar tidak ada user tanpa profil
-      const msg = /duplicate|unique/i.test(pErr.message) ? "Username sudah dipakai." : pErr.message;
+      console.error("profiles insert error:", pErr);
+      await admin.auth.admin.deleteUser(uid).catch(() => {}); // rollback
+      const em = errMsg(pErr);
+      let msg;
+      if (/duplicate|unique/i.test(em)) msg = "Username sudah dipakai.";
+      else if (/relation|does not exist|schema cache|find the table|profiles/i.test(em))
+        msg = "Tabel 'profiles' belum ada. Jalankan ulang supabase-schema.sql di Supabase SQL Editor.";
+      else msg = "Gagal menyimpan profil: " + em;
       return res.status(400).json({ ok: false, error: msg });
     }
 
@@ -54,6 +66,7 @@ module.exports = async (req, res) => {
 
     res.status(200).json({ ok: true, session });
   } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
+    console.error("register fatal:", err);
+    res.status(500).json({ ok: false, error: errMsg(err, "Gagal daftar.") });
   }
 };

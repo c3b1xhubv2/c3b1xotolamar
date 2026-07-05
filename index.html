@@ -682,16 +682,18 @@ $("authBtn").addEventListener("click", async () => {
       if(!username || !email || !pass) return setStatus($("authStatus"),"err","&#10005; Username, email, dan password wajib diisi.");
       if(pass !== $("authPass2").value) return setStatus($("authStatus"),"err","&#10005; Password tidak sama.");
       setBusy(true); setStatus($("authStatus"),"info","Membuat akun…");
-      const r = await fetch("/api/register",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ username, email, password: pass }) }).then(r=>r.json());
-      if(!r.ok) throw new Error(r.error);
+      const resp = await fetch("/api/register",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ username, email, password: pass }) });
+      const r = await resp.json().catch(()=>({}));
+      if(!resp.ok || !r.ok) throw new Error((typeof r.error==="string" && r.error) ? r.error : ("Gagal daftar (HTTP "+resp.status+")"));
       if(r.session) await applySession(r.session);
       else setStatus($("authStatus"),"ok","&#10003; Akun dibuat. Silakan Masuk.");
     } else {
       const identifier = $("loginId").value.trim();
       if(!identifier || !pass) return setStatus($("authStatus"),"err","&#10005; Isi email/username dan password.");
       setBusy(true); setStatus($("authStatus"),"info","Masuk…");
-      const r = await fetch("/api/login",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ identifier, password: pass }) }).then(r=>r.json());
-      if(!r.ok) throw new Error(r.error);
+      const resp = await fetch("/api/login",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ identifier, password: pass }) });
+      const r = await resp.json().catch(()=>({}));
+      if(!resp.ok || !r.ok) throw new Error((typeof r.error==="string" && r.error) ? r.error : ("Gagal masuk (HTTP "+resp.status+")"));
       await applySession(r.session);
     }
   } catch(e){
@@ -767,9 +769,10 @@ async function loadProfile(){
 async function pfSave(btnId, statusEl, body, okMsg){
   const btn = $(btnId); btn.disabled=true; const t=btn.textContent; btn.innerHTML='<span class="spinner"></span> Menyimpan…';
   try {
-    const r = await authFetch("/api/profile",{ method:"POST", body: JSON.stringify(body) }).then(r=>r.json());
+    const resp = await authFetch("/api/profile",{ method:"POST", body: JSON.stringify(body) });
+    const r = await resp.json().catch(()=>({}));
     if(r.ok){ setStatus(statusEl,"ok","&#10003; " + okMsg); await loadProfile(); }
-    else setStatus(statusEl,"err","&#10005; " + escapeHtml(r.error));
+    else setStatus(statusEl,"err","&#10005; " + escapeHtml((typeof r.error==="string" && r.error) ? r.error : ("Gagal (HTTP "+resp.status+")")));
   } catch(e){ setStatus(statusEl,"err","&#10005; " + escapeHtml(e.message)); }
   finally { btn.disabled=false; btn.textContent=t; }
 }
