@@ -194,6 +194,45 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
   .dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
   .dot.err { background: var(--err); box-shadow: 0 0 8px var(--err); }
+
+  /* ---------- Panduan / tutorial ---------- */
+  .tut { max-width: 720px; margin: 0 auto; }
+  .tut .card { margin-bottom: 16px; }
+  .tut h3 { font-family: var(--display); font-size: 15px; margin: 0 0 6px; }
+  .tut > .card > p { font-size: 13.5px; margin: 6px 0; color: var(--muted); }
+  .tut a { word-break: break-all; }
+  code.k { background: var(--panel2); border: 1px solid var(--border); border-radius: 5px;
+    padding: 1px 6px; font-family: var(--mono); font-size: 12px; color: #ffd0d6; }
+  .steps { margin-top: 10px; }
+  .step { display: flex; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border); }
+  .step:first-child { border-top: none; padding-top: 4px; }
+  .step .n { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--red-soft);
+    border: 1px solid var(--red); color: var(--red); font-weight: 800; font-size: 13px;
+    display: grid; place-items: center; font-family: var(--display); }
+  .step .txt { font-size: 13.5px; }
+  .step .txt b { color: var(--text); }
+  .callout { background: var(--red-soft); border: 1px solid rgba(255,43,65,.3); border-radius: 10px;
+    padding: 11px 13px; font-size: 12.5px; color: #ffb3bd; margin-top: 12px; }
+  .tbl-row { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .tbl-row:first-child { border-top: none; }
+  .tbl-row .q { flex: 0 0 42%; color: var(--text); font-weight: 600; }
+  .tbl-row .a { flex: 1; color: var(--muted); }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 560px) {
+    .topbar { padding: 12px 14px; gap: 10px; }
+    .topbar .email { display: none; }
+    .topbar .title { font-size: 14px; }
+    .topbar .btn-ghost { padding: 9px 12px; }
+    .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { flex: 0 0 auto; white-space: nowrap; }
+    input, select, textarea { font-size: 16px; }   /* cegah auto-zoom iOS saat fokus */
+    .card { padding: 16px; }
+    .auth-body { padding: 20px 18px 22px; }
+    .tbl-row { flex-direction: column; gap: 3px; }
+    .tbl-row .q { flex: none; }
+  }
 </style>
 </head>
 <body>
@@ -253,6 +292,7 @@
   <div class="tabs">
     <button class="tab active" data-tab="kirim">Kirim Lamaran</button>
     <button class="tab" data-tab="pengaturan">Pengaturan</button>
+    <button class="tab" data-tab="panduan">Panduan</button>
   </div>
 
   <div class="container">
@@ -367,6 +407,73 @@
       </div>
     </div>
 
+    <!-- ---------- TAB PANDUAN ---------- -->
+    <div id="tabPanduan" class="hidden">
+      <div class="tut">
+
+        <div class="card">
+          <h3>Panduan singkat</h3>
+          <p>Cukup 3 langkah: buat App Password Gmail, simpan di Pengaturan, lalu kirim lamaran. Setelah App Password tersimpan sekali, kamu tinggal kirim-kirim saja.</p>
+        </div>
+
+        <div class="card">
+          <h3>1 · Buat App Password Gmail</h3>
+          <p>App Password adalah kode 16 huruf khusus dari Google. Bukan password login Gmail-mu.</p>
+          <div class="steps">
+            <div class="step"><div class="n">1</div><div class="txt">Aktifkan <b>Verifikasi 2 Langkah</b> di akun Google: <a href="https://myaccount.google.com/security" target="_blank" rel="noopener">myaccount.google.com/security</a></div></div>
+            <div class="step"><div class="n">2</div><div class="txt">Buka <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">myaccount.google.com/apppasswords</a></div></div>
+            <div class="step"><div class="n">3</div><div class="txt">Beri nama bebas (mis. <b>Auto Lamaran</b>), lalu klik <b>Create</b> / <b>Buat</b>.</div></div>
+            <div class="step"><div class="n">4</div><div class="txt">Google menampilkan 16 huruf, mis. <code class="k">abcd efgh ijkl mnop</code>. Salin <b>tanpa spasi</b> menjadi <code class="k">abcdefghijklmnop</code>.</div></div>
+          </div>
+          <div class="callout">Kalau menu App Password tidak muncul, berarti Verifikasi 2 Langkah belum aktif — aktifkan dulu di langkah 1.</div>
+        </div>
+
+        <div class="card">
+          <h3>2 · Atur di tab Pengaturan</h3>
+          <div class="steps">
+            <div class="step"><div class="n">1</div><div class="txt">Buka tab <b>Pengaturan</b>.</div></div>
+            <div class="step"><div class="n">2</div><div class="txt">Isi <b>Email Gmail pengirim</b> (mis. opcebi@gmail.com) — ini akun yang mengirim email.</div></div>
+            <div class="step"><div class="n">3</div><div class="txt">Tempel <b>App Password 16 karakter</b> tadi di kolom <b>App Password Gmail</b>.</div></div>
+            <div class="step"><div class="n">4</div><div class="txt">Isi <b>Nama tampilan pengirim</b> — ini nama yang dilihat HRD sebagai pengirim.</div></div>
+            <div class="step"><div class="n">5</div><div class="txt">Klik <b>Simpan konfigurasi</b>.</div></div>
+            <div class="step"><div class="n">6</div><div class="txt">Klik <b>Tes koneksi</b> — harus muncul hijau "Koneksi Gmail berhasil".</div></div>
+          </div>
+          <div class="callout">App Password disimpan terenkripsi di akunmu. Saat mengubah data lain nanti, kolom App Password boleh dikosongkan — password lama tetap dipakai.</div>
+        </div>
+
+        <div class="card">
+          <h3>3 · Kirim lamaran</h3>
+          <div class="steps">
+            <div class="step"><div class="n">1</div><div class="txt">Buka tab <b>Kirim Lamaran</b>.</div></div>
+            <div class="step"><div class="n">2</div><div class="txt">Isi <b>Email tujuan</b> (email HRD/perusahaan) dan <b>Subject</b>.</div></div>
+            <div class="step"><div class="n">3</div><div class="txt">Isi <b>Posisi</b>, lalu pilih <b>Deskripsi keahlian</b> (Bartender / Engineer / tulis sendiri / kosong). Isi email tersusun otomatis.</div></div>
+            <div class="step"><div class="n">4</div><div class="txt">(Opsional) buka <b>Data pengirim</b> untuk mengubah nama/HP/email di tanda tangan.</div></div>
+            <div class="step"><div class="n">5</div><div class="txt">Tambahkan lampiran: <b>upload file</b> (bisa banyak) dan/atau <b>Tambah link file</b>.</div></div>
+            <div class="step"><div class="n">6</div><div class="txt">Cek <b>Preview Email</b> (masih bisa diedit manual), lalu klik <b>Kirim email</b>.</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Tentang lampiran</h3>
+          <div class="steps">
+            <div class="step"><div class="n">A</div><div class="txt"><b>Upload file langsung</b>: total maks ~4 MB (batas Vercel). CV PDF biasa aman.</div></div>
+            <div class="step"><div class="n">B</div><div class="txt"><b>File besar / banyak</b>: pakai <b>Tambah link file</b>. Server mengunduh dari link lalu melampirkannya sebagai file asli — tidak kena batas 4 MB.</div></div>
+            <div class="step"><div class="n">C</div><div class="txt"><b>Link Google Drive</b>: set akses ke "Siapa saja yang memiliki link". Otomatis diubah jadi unduhan.</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Kalau ada masalah</h3>
+          <div class="tbl-row"><div class="q">"ENCRYPTION_KEY harus 64 karakter"</div><div class="a">Env server belum diatur. Admin isi <code class="k">ENCRYPTION_KEY</code> lalu redeploy.</div></div>
+          <div class="tbl-row"><div class="q">Tes koneksi "Invalid login"</div><div class="a">App Password salah atau memakai password Gmail biasa. Buat ulang App Password.</div></div>
+          <div class="tbl-row"><div class="q">Daftar tapi tidak bisa masuk</div><div class="a">Konfirmasi email masih aktif — cek email untuk link konfirmasi.</div></div>
+          <div class="tbl-row"><div class="q">"Total file terlalu besar"</div><div class="a">Total upload melebihi ~4 MB. Gunakan opsi link untuk file besar.</div></div>
+          <div class="tbl-row"><div class="q">"Sesi tidak valid"</div><div class="a">Keluar lalu login ulang.</div></div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <div class="app-footer">
@@ -476,12 +583,12 @@ $("logoutBtn").addEventListener("click", async () => { await sb.auth.signOut(); 
 // ------------------------------------------------------------------
 // TABS
 // ------------------------------------------------------------------
+const PANELS = { kirim:"tabKirim", pengaturan:"tabPengaturan", panduan:"tabPanduan" };
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
   t.classList.add("active");
-  const tab = t.dataset.tab;
-  $("tabKirim").classList.toggle("hidden", tab!=="kirim");
-  $("tabPengaturan").classList.toggle("hidden", tab!=="pengaturan");
+  Object.entries(PANELS).forEach(([k,id]) => $(id).classList.toggle("hidden", t.dataset.tab!==k));
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }));
 $("gotoSettings").addEventListener("click", () => {
   document.querySelector('.tab[data-tab="pengaturan"]').click();
